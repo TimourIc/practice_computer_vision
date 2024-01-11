@@ -3,3 +3,5 @@ data/*
 logs/*
 !logs/.gitkeep
 !data/.gitkeep
+results/models/*
+!results/models/.gitkeep
