@@ -1,1 +1,1 @@
-This is a directory for myself to remember pytorch after mainly working with Tensorflow for a while. We will compare three different models on their NIST performace. 
+Simple repository to play around with different computer vision models and compare their performance on common benchmarks. 
