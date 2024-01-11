@@ -1,0 +1,5 @@
+PATHS:
+  results: "results"
+  models_path: "results/models"
+ 
+  
