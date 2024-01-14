@@ -57,7 +57,7 @@ def objective(
     # trial.set_user_attr("pruned_epoch", max_epochs)
 
     for epoch in range(0, max_epochs):
-        _ = train(model, optimizer, loss_fn, epoch, train_loader)
+        _,_= train(model, optimizer, loss_fn, epoch, train_loader)
         accuracy, val_loss = test(model, loss_fn, val_loader)
         trial.report(accuracy, epoch)
 

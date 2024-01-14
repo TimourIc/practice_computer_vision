@@ -90,14 +90,17 @@ def train(
     loss_fn: Type[Module],
     epoch: int,
     train_loader: DataLoader,
-) -> float:
+) -> tuple[float,float]:
     model.train()
     train_loss = 0
+    correct=0
     for batch_idx, (data, target) in enumerate(train_loader):
         data = data.to(device)
         target = target.to(device)
         optimizer.zero_grad()
         output = model(data)
+        pred = output.argmax(dim=1, keepdim=True)
+        correct += pred.eq(target.view_as(pred)).sum().item()
         loss = loss_fn(output, target)
         loss.backward()
         optimizer.step()
@@ -105,7 +108,9 @@ def train(
 
     logging.info(f"Train Epoch: {epoch}, Train Average Loss: {loss.item():.4f}")
 
-    return train_loss / len(train_loader)
+    average_train_loss=train_loss / len(train_loader)
+    average_train_accuracy=correct/ len(train_loader.dataset)
+    return average_train_loss, average_train_accuracy
 
 
 def train_full(
@@ -118,14 +123,17 @@ def train_full(
 ):
     training_loss = []
     validation_loss = []
+    training_accuracy=[]
+    validation_accuracy=[]
     early_stopper = EarlyStopper()
 
     for epoch in range(0, max_epochs):
-        train_loss = train(model, optimizer, loss_fn, epoch, train_loader)
-        _, val_loss = test(model, loss_fn, val_loader)
+        train_loss, train_accuracy = train(model, optimizer, loss_fn, epoch, train_loader)
+        val_accuracy, val_loss = test(model, loss_fn, val_loader)
         training_loss.append(train_loss)
         validation_loss.append(val_loss)
-
+        training_accuracy.append(train_accuracy)
+        validation_accuracy.append(val_accuracy)
         if early_stopper.early_stop(model, val_loss):
             logging.info(
                 f"Stopped Early at epoch {epoch} because the validation loss was no longer improving"
@@ -135,7 +143,7 @@ def train_full(
 
     final_epoch = epoch
 
-    return training_loss, validation_loss, final_epoch
+    return training_loss, validation_loss, training_accuracy, validation_accuracy, final_epoch
 
 
 def test(
@@ -172,7 +180,7 @@ class EarlyStopper:
         self.best_model_state = None
 
     def early_stop(self, model, validation_loss):
-        logging(f"Early stop counter: {self.counter}")
+        logging.info(f"Early stop counter: {self.counter}")
         if validation_loss < self.min_validation_loss:
             self.min_validation_loss = validation_loss
             self.counter = 0

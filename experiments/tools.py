@@ -118,7 +118,7 @@ def train_and_save(
     models_path: str,
 ):
     logging.info(f"Starting model training for {model_name} model")
-    training_loss, validation_loss, _ = train_full(
+    training_loss, validation_loss, training_accuracy, validation_accuracy, _ = train_full(
         model=input_model,
         optimizer=optimizer,
         loss_fn=loss_fn(),
@@ -144,13 +144,15 @@ def train_and_save(
     )
 
     logging.info(f"Saving train/val/test info in:{model_path}")
-    with open(f"{model_path}/{dataset_name}_training_loss.pickle", "wb") as f:
+    with open(f"{model_path}/training_loss.pickle", "wb") as f:
         pickle.dump(
             {
                 "training_loss": training_loss,
                 "validation_loss": validation_loss,
-                "test_accuracy": test_accuracy,
                 "test_loss": test_loss,
+                "training_accuracy": training_accuracy,
+                "validation_accuracy": validation_accuracy,
+                "test_accuracy": test_accuracy
             },
             f,
         )

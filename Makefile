@@ -8,9 +8,6 @@ venv:
 clean_logs:
 	rm -rf logs/*
 
-
- 
-
 FNN_tuning_MNIST:
 	python3 -m experiments.tuning.main --MODEL_NAME FNN --DATASET_NAME MNIST 
 AlexNet_tuning_MNIST:
@@ -40,4 +37,5 @@ all_training_CIFAR100: FNN_training_CIFAR100 AlexNet_training_CIFAR100
 
 tune_and_train_all_CIFAR100: all_tuning_CIFAR100 all_training_CIFAR100
 
- 
+make_figures:
+	python3 -m experiments.plotting.main
