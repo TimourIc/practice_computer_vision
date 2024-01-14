@@ -4,4 +4,6 @@ logs/*
 !logs/.gitkeep
 !data/.gitkeep
 results/models/*
+results/figures/*
 !results/models/.gitkeep
+!results/figures/.gitkeep
