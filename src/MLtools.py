@@ -61,7 +61,7 @@ def get_mnist_data(seed: int = 42, fashion: bool = True):
     return train_dataset, val_dataset, test_dataset
 
 
-def get_CIFAR_data(seed: int = 42, fashion: bool = True):
+def get_CIFAR_data(seed: int = 42):
     logging.info("Downloading Data")
 
     torch.manual_seed(seed)
