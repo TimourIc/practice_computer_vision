@@ -37,7 +37,7 @@ all_training_CIFAR100: FNN_training_CIFAR100 AlexNet_training_CIFAR100
 
 tune_and_train_all_CIFAR100: all_tuning_CIFAR100 all_training_CIFAR100
 
-VIT_training_CIFAR100: 
+VIT_exploring_CIFAR100: 
 	python3 -m experiments.transformer_test.main
 
 make_figures:

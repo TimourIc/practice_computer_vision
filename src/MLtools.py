@@ -20,6 +20,9 @@ import mlflow
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
+
+
+
 def model_params(input_model: Type[nn.Module]):
     num_params = 0
     for x in input_model.parameters():
@@ -210,3 +213,21 @@ class EarlyStopper:
                     model.load_state_dict(self.best_model_state)
                     return True
         return False
+
+
+def img_to_patch(x: torch.Tensor, patch_size: int, flatten_channels: bool = True):
+    """
+    Inputs:
+        x - torch.Tensor representing the image of shape [B, C, H, W]
+        patch_size - Number of pixels per dimension of the patches (integer)
+        flatten_channels - If True, the patches will be returned in a flattened format
+                           as a feature vector instead of a image grid.
+    """
+    B, C, H, W = x.shape
+    # print(f"batch_size: {B}, channels: {C}, height:{H}, width: {W}")
+    x = x.reshape(B, C, H // patch_size, patch_size, W // patch_size, patch_size)
+    x = x.permute(0, 2, 4, 1, 3, 5)  # [B, H', W', C, p_H, p_W]
+    x = x.flatten(1, 2)  # [B, H'*W', C, p_H, p_W]
+    if flatten_channels:
+        x = x.flatten(2, 4)  # [B, H'*W', C*p_H*p_W]
+    return x
