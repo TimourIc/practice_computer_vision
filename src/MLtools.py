@@ -15,6 +15,8 @@ from torchvision import datasets, transforms
 from torchvision.transforms import ToTensor
 from tqdm import tqdm
 
+import mlflow
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -105,7 +107,6 @@ def train(
         loss.backward()
         optimizer.step()
         train_loss += loss.item()
-        print(batch_idx)
 
     logging.info(f"Train Epoch: {epoch}, Train Average Loss: {loss.item():.4f}")
 
@@ -121,6 +122,7 @@ def train_full(
     train_loader: DataLoader,
     val_loader: DataLoader,
     max_epochs: int,
+    log_mlflow: bool= False
 ):
     training_loss = []
     validation_loss = []
@@ -137,6 +139,13 @@ def train_full(
         validation_loss.append(val_loss)
         training_accuracy.append(train_accuracy)
         validation_accuracy.append(val_accuracy)
+
+        if log_mlflow:
+            mlflow.log_metric("train_loss",train_loss, step=epoch)
+            mlflow.log_metric("val_loss",val_loss, step=epoch)
+            mlflow.log_metric("train_accuracy",train_accuracy , step=epoch)
+            mlflow.log_metric("val_accuracy", val_accuracy, step=epoch)
+
         if early_stopper.early_stop(model, val_loss):
             logging.info(
                 f"Stopped Early at epoch {epoch} because the validation loss was no longer improving"

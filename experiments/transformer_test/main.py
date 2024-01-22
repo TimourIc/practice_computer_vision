@@ -13,9 +13,14 @@ from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader
 
 from experiments.tools import data_to_list, train_and_save
-from src.MLtools import get_CIFAR_data, get_mnist_data, train_full
+from src.MLtools import get_CIFAR_data, get_mnist_data, train_full, test, model_params
 from src.models import FNN, AlexNet
 from src.optuna_tools import study_properties
+
+import mlflow
+
+mlflow.set_tracking_uri("sqlite:///mlflow.db")
+mlflow.set_experiment("VIT_CIFAR")
 
 logger = logging.getLogger(__name__)
 
@@ -23,11 +28,18 @@ logger = logging.getLogger(__name__)
 MAX_EPOCHS: int = 40
 LOSS_FN = CrossEntropyLoss
 MODELS = {"FNN": FNN, "AlexNet": AlexNet}
-LR = 0.0001
-BATCH_SIZE = 32
+LR = 0.001
+BATCH_SIZE = 64
 OPTIMIZER = "Adam"
 DROPOUT_PROB = 0.25
-DATASET_LOADERS = {"MNIST": get_mnist_data, "CIFAR100": get_CIFAR_data}
+WEIGHT_DECAY=0.001
+
+#TRANSFORMER PARAMS
+EMBED_DIM=256
+HIDDEN_DIM=512
+NUM_HEADS=8
+NUM_LAYERS=6
+
 logger.info(
     f"Running {__file__} with default parameters: MAX_EPOCHS=%s, LOSS_FN=%s, LR=%s, BATCH_SIZE=%s,OPTIMIZER=%s",
     MAX_EPOCHS,
@@ -36,6 +48,20 @@ logger.info(
     BATCH_SIZE,
     OPTIMIZER,
 )
+
+#HYPERPARAM DICT FOR TRACKING
+params={
+        "max_epochs": MAX_EPOCHS,
+        "lr" : LR,
+        "batch_size" : BATCH_SIZE,
+        "optimizer" : OPTIMIZER,
+        "dropout": DROPOUT_PROB,
+        "weight_decay": WEIGHT_DECAY,
+        "embed_dim": EMBED_DIM,
+        "hidden_dim": HIDDEN_DIM,
+        "num_heads":NUM_HEADS,
+        "num_layers": NUM_LAYERS,
+        }
 
 # IMPORT REPO PATHS
 with open("config/config.yaml", "r") as file:
@@ -191,39 +217,55 @@ class VisionTransformer(nn.Module):
 
 
 if __name__ == "__main__":
-    # # show_img()
-    # CIFAR_images = torch.stack([val_dataset[idx][0] for idx in range(4)], dim=0)
-    # print(f"shape before transform {CIFAR_images.shape}")
-    # x = img_to_patch(x=CIFAR_images, patch_size=4, flatten_channels=True)
-    # print(f"shape after transform {x.shape}")
-    # print(f"shape of element in batch: {x[0].shape}")
-    model = VisionTransformer(
-        embed_dim=256,
-        hidden_dim=512,
-        num_heads=8,
-        num_layers=6,
-        patch_size=4,
-        num_channels=3,
-        num_patches=64,
-        num_classes=100,
-        dropout=0.2,
-    ).to(device)
-    optimizer = getattr(optim, OPTIMIZER)(
-        model.parameters(), lr=LR, weight_decay=0.001
-    )
-    train_dataset, val_dataset, test_dataset = get_CIFAR_data()
-    train_loader = DataLoader(train_dataset, BATCH_SIZE)
-    val_loader = DataLoader(val_dataset, BATCH_SIZE)
-    test_loader = DataLoader(test_dataset, BATCH_SIZE)
-    train_full(
-        model=model,
-        optimizer=optimizer,
-        loss_fn=LOSS_FN(),
-        train_loader=train_loader,
-        val_loader=val_loader,
-        max_epochs=MAX_EPOCHS
-    )
-    # attn=AttentionBlock(embed_dim=48,hidden_dim=)
+
+
+    
+
+    with mlflow.start_run(run_name="VIT_baseline"):
+
+        mlflow.set_tag("model_name", "VisionTransformer")
+        mlflow.log_params(params)
+
+        model = VisionTransformer(
+            embed_dim=EMBED_DIM,
+            hidden_dim=HIDDEN_DIM,
+            num_heads=NUM_HEADS,
+            num_layers=NUM_LAYERS,
+            patch_size=4,
+            num_channels=3,
+            num_patches=64,
+            num_classes=100,
+            dropout=DROPOUT_PROB,
+        ).to(device)
+
+        logging.info(f"Created Vision Transformer Model with {model_params} trainable parameters")
+
+
+        optimizer = getattr(optim, OPTIMIZER)(
+            model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY
+        )
+
+        train_dataset, val_dataset, test_dataset = get_CIFAR_data()
+        train_loader = DataLoader(train_dataset, BATCH_SIZE)
+        val_loader = DataLoader(val_dataset, BATCH_SIZE)
+        test_loader = DataLoader(test_dataset, BATCH_SIZE)
+        train_full(
+            model=model,
+            optimizer=optimizer,
+            loss_fn=LOSS_FN(),
+            train_loader=train_loader,
+            val_loader=val_loader,
+            max_epochs=MAX_EPOCHS,
+            log_mlflow=True
+        )
+        test_accuracy, test_loss = test(
+        model=model, loss_fn=LOSS_FN(), test_loader=test_loader
+        )
+        
+        mlflow.log_metric("test_loss",test_loss)
+        mlflow.log_metric("test_accuracy",test_accuracy)    
+
+        # attn=AttentionBlock(embed_dim=48,hidden_dim=)
     # train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=True, pin_memory=True)
     # val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, drop_last=False)
     # test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, drop_last=False)
