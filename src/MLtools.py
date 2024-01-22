@@ -90,10 +90,10 @@ def train(
     loss_fn: Type[Module],
     epoch: int,
     train_loader: DataLoader,
-) -> tuple[float,float]:
+) -> tuple[float, float]:
     model.train()
     train_loss = 0
-    correct=0
+    correct = 0
     for batch_idx, (data, target) in enumerate(train_loader):
         data = data.to(device)
         target = target.to(device)
@@ -105,11 +105,12 @@ def train(
         loss.backward()
         optimizer.step()
         train_loss += loss.item()
+        print(batch_idx)
 
     logging.info(f"Train Epoch: {epoch}, Train Average Loss: {loss.item():.4f}")
 
-    average_train_loss=train_loss / len(train_loader)
-    average_train_accuracy=correct/ len(train_loader.dataset)
+    average_train_loss = train_loss / len(train_loader)
+    average_train_accuracy = correct / len(train_loader.dataset)
     return average_train_loss, average_train_accuracy
 
 
@@ -123,12 +124,14 @@ def train_full(
 ):
     training_loss = []
     validation_loss = []
-    training_accuracy=[]
-    validation_accuracy=[]
+    training_accuracy = []
+    validation_accuracy = []
     early_stopper = EarlyStopper()
 
     for epoch in range(0, max_epochs):
-        train_loss, train_accuracy = train(model, optimizer, loss_fn, epoch, train_loader)
+        train_loss, train_accuracy = train(
+            model, optimizer, loss_fn, epoch, train_loader
+        )
         val_accuracy, val_loss = test(model, loss_fn, val_loader)
         training_loss.append(train_loss)
         validation_loss.append(val_loss)
@@ -143,7 +146,13 @@ def train_full(
 
     final_epoch = epoch
 
-    return training_loss, validation_loss, training_accuracy, validation_accuracy, final_epoch
+    return (
+        training_loss,
+        validation_loss,
+        training_accuracy,
+        validation_accuracy,
+        final_epoch,
+    )
 
 
 def test(

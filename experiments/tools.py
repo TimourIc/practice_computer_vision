@@ -118,7 +118,13 @@ def train_and_save(
     models_path: str,
 ):
     logging.info(f"Starting model training for {model_name} model")
-    training_loss, validation_loss, training_accuracy, validation_accuracy, _ = train_full(
+    (
+        training_loss,
+        validation_loss,
+        training_accuracy,
+        validation_accuracy,
+        _,
+    ) = train_full(
         model=input_model,
         optimizer=optimizer,
         loss_fn=loss_fn(),
@@ -152,7 +158,7 @@ def train_and_save(
                 "test_loss": test_loss,
                 "training_accuracy": training_accuracy,
                 "validation_accuracy": validation_accuracy,
-                "test_accuracy": test_accuracy
+                "test_accuracy": test_accuracy,
             },
             f,
         )
