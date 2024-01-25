@@ -10,13 +10,13 @@ with open("config/config.yaml", "r") as file:
 models_path = config["PATHS"]["models_path"]
 figure_path = config["PATHS"]["figures_path"]
 dataset_names = ["MNIST", "CIFAR100"]
-model_names = ["FNN", "AlexNet"]
+model_names = ["FNN", "AlexNet", "VIT"]
 
 
 if __name__ == "__main__":
     figmaker = FigureMaker(dataset_names=dataset_names, model_names=model_names)
     figmaker.load_results(models_path=models_path)
     figmaker.plot_training_curves(
-        save_path=figure_path, figure_name="training_features"
+        save_path=figure_path, figure_name="train_comparison"
     )
     figmaker.plot_test_results(save_path=figure_path, figure_name="test_comparison")

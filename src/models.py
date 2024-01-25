@@ -1,5 +1,5 @@
 from typing import Type
-
+import logging
 import numpy as np
 import torch
 from torch import nn
@@ -7,7 +7,6 @@ from torch.nn import functional as F
 from torch.nn.modules import Module
 from torch.optim import Adam, Optimizer
 from torch.utils.data import DataLoader
-
 from src.MLtools import img_to_patch
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -121,14 +120,7 @@ class AlexNet(nn.Module):
 class AttentionBlock(nn.Module):
 
     def __init__(self, embed_dim, hidden_dim, num_heads, dropout=0.0):
-        """
-        Inputs:
-            embed_dim - Dimensionality of input and attention feature vectors
-            hidden_dim - Dimensionality of hidden layer in feed-forward network
-                         (usually 2-4x larger than embed_dim)
-            num_heads - Number of heads to use in the Multi-Head Attention block
-            dropout - Amount of dropout to apply in the feed-forward network
-        """
+
         super().__init__()
 
         self.layer_norm_1 = nn.LayerNorm(embed_dim)
@@ -162,21 +154,11 @@ class VisionTransformer(nn.Module):
         num_classes,
         patch_size,
         num_patches,
-        dropout=0.0,
+        dropout,
     ):
         """
-        Inputs:
-            embed_dim - Dimensionality of the input feature vectors to the Transformer
-            hidden_dim - Dimensionality of the hidden layer in the feed-forward networks
-                         within the Transformer
-            num_channels - Number of channels of the input (3 for RGB)
-            num_heads - Number of heads to use in the Multi-Head Attention block
-            num_layers - Number of layers to use in the Transformer
-            num_classes - Number of classes to predict
-            patch_size - Number of pixels that the patches have per dimension
-            num_patches - Maximum number of patches an image can have
-            dropout - Amount of dropout to apply in the feed-forward network and
-                      on the input encoding
+        taken from the tutorials in: https://github.com/phlippe/uvadlc_notebooks
+
         """
         super().__init__()
 
@@ -219,3 +201,39 @@ class VisionTransformer(nn.Module):
         cls = x[0]
         out = self.mlp_head(cls)
         return out
+    
+def find_closest_divisor(x,y):
+
+    if x <= 0:
+        raise ValueError("x should be a positive integer")
+    divisors = [i for i in range(1, x + 1) if x % i == 0]
+
+    closest_divisor = min(divisors, key=lambda divisor: abs(divisor - y))
+
+    return closest_divisor
+
+class Standard_VIT(VisionTransformer):
+    
+    #TRANSFORMER PARAMS
+    EMBED_DIM=256
+    HIDDEN_DIM=512
+    NUM_HEADS=8
+    NUM_LAYERS=6
+
+    def __init__(self,input_size, num_channels, num_classes, dropout_prob=0.0):
+        
+        patch_size=find_closest_divisor(input_size,4)
+        num_patches=int(input_size/patch_size)**2
+
+        super().__init__(
+        embed_dim=Standard_VIT.EMBED_DIM,
+        hidden_dim=Standard_VIT.HIDDEN_DIM,
+        num_channels=num_channels,
+        num_heads=Standard_VIT.NUM_HEADS,
+        num_layers=Standard_VIT.NUM_LAYERS,
+        num_classes=num_classes,
+        patch_size=patch_size,
+        num_patches=num_patches,
+        dropout=dropout_prob,
+        )
+    

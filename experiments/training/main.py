@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 
 from experiments.tools import data_to_list, train_and_save
 from src.MLtools import get_CIFAR_data, get_mnist_data
-from src.models import FNN, AlexNet
+from src.models import FNN, AlexNet, Standard_VIT
 from src.optuna_tools import study_properties
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # DEFAULT PARAMS
 MAX_EPOCHS: int = 40
 LOSS_FN = CrossEntropyLoss
-MODELS = {"FNN": FNN, "AlexNet": AlexNet}
+MODELS = {"FNN": FNN, "AlexNet": AlexNet, "VIT": Standard_VIT }
 LR = 0.0001
 BATCH_SIZE = 32
 OPTIMIZER = "Adam"

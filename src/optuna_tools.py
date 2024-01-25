@@ -44,7 +44,7 @@ def objective(
     model = model.to(device)
 
     optimizer = getattr(optim, optimizer_name)(
-        model.parameters(), lr=lr, weight_decay=0.01
+        model.parameters(), lr=lr, weight_decay=0.001
     )
 
     train_loader = DataLoader(train_dataset, batch_size)

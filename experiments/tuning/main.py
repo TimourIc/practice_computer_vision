@@ -10,7 +10,7 @@ from torch.nn import CrossEntropyLoss
 
 from experiments.tools import tune_model
 from src.MLtools import get_CIFAR_data, get_mnist_data
-from src.models import FNN, AlexNet
+from src.models import FNN, AlexNet, Standard_VIT
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ HB_MIN_RESOURCE: int = 3
 HB_MAX_RESOURCE: int = 20
 HB_REDUCTION_FACTOR: int = 3
 LOSS_FN = CrossEntropyLoss
-MODELS = {"FNN": FNN, "AlexNet": AlexNet}
+MODELS = {"FNN": FNN, "AlexNet": AlexNet, "VIT": Standard_VIT}
 DATASET_LOADERS = {"MNIST": get_mnist_data, "CIFAR100": get_CIFAR_data}
 logger.info(sys.argv)
 logger.info(

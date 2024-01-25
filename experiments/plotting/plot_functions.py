@@ -26,7 +26,7 @@ class FigureMaker:
 
     def plot_training_curves(self, save_path: str, figure_name: str):
         fig, axs = plt.subplots(2, len(self.dataset_names), figsize=(8, 6))
-        colors = ["blue", "red"]
+        colors = ["blue", "red", "green"]
 
         for i, dataset_name in enumerate(self.dataset_names):
             for j, model_name in enumerate(self.model_names):
@@ -72,8 +72,9 @@ class FigureMaker:
                     color=colors[j],
                 )
 
-            axs[0, i].legend(loc="upper right", fontsize=7)
-            axs[1, i].legend(loc="upper right", fontsize=7)
+            if i==0:
+                axs[0, i].legend(loc="upper right", fontsize=8)
+            # axs[1, i].legend(loc="upper right", fontsize=7)
             axs[0, i].set_title(f"{dataset_name}")
             axs[1, i].set_title(f"{dataset_name}")
             axs[1, i].set_xlabel("epochs")
@@ -85,7 +86,7 @@ class FigureMaker:
 
     def plot_test_results(self, save_path: str, figure_name: str):
         bar_width = 0.35
-        index = np.arange(len(self.model_names))
+        index = np.arange(len(self.dataset_names))
         fig, ax = plt.subplots(1, 1, figsize=(8, 6))
 
         for i, model_name in enumerate(self.model_names):
@@ -96,21 +97,22 @@ class FigureMaker:
                     for dataset_name in self.dataset_names
                 ],
                 bar_width,
-                label=model_name,
+                label="a",
             )
 
             # Add text labels on top of the bars
-            for bar, model_name in zip(bars, self.model_names):
+            for bar in (bars):
                 height = bar.get_height()
                 ax.text(
                     bar.get_x() + bar.get_width() / 2,
                     height,
-                    f"{model_name}, acc: {height:.2f}",
+                    f"{model_name} {100*height:.1f}%",
                     ha="center",
                     va="bottom",
                 )
 
-        ax.set_xticks(index + bar_width * (len(self.dataset_names) - 1) / 2)
+        ax.set_xticks(index + bar_width * (len(self.dataset_names) - 1) )
+        self.dataset_names=["fashion MNIST" if i=="MNIST" else i for i in self.dataset_names   ]
         ax.set_xticklabels(self.dataset_names)
         ax.set_ylabel("accuracy")
         ax.set_ylim(0, 1)

@@ -5,7 +5,7 @@ from datetime import datetime
 
 
 log_dir = "logs"
-log_file_name = f'transformer_exploration_{datetime.now().strftime("%Y%m%d%H%M%S")}.log'
+log_file_name = f'mlflow_exploration_{datetime.now().strftime("%Y%m%d%H%M%S")}.log'
 
 
 fh = logging.FileHandler(f"logs/{log_file_name}")

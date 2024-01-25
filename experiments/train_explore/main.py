@@ -14,25 +14,27 @@ from torch.utils.data import DataLoader
 
 from experiments.tools import data_to_list, train_and_save
 from src.MLtools import get_CIFAR_data, get_mnist_data, train_full, test, model_params
-from src.models import FNN, AlexNet, VisionTransformer
+from src.models import FNN, AlexNet, Standard_VIT
 from src.optuna_tools import study_properties
 
 import mlflow
 
-mlflow.set_tracking_uri("sqlite:///mlflow.db")
-mlflow.set_experiment("VIT_CIFAR")
+"""SCRIPT TO PLAY AROUND WITH DIFFERENT MODELS IN MLFLOW"""
 
 logger = logging.getLogger(__name__)
 
-# DEFAULT PARAMS
+#PARAMS
 MAX_EPOCHS: int = 40
 LOSS_FN = CrossEntropyLoss
-MODELS = {"FNN": FNN, "AlexNet": AlexNet}
+MODELS = {"FNN": FNN, "AlexNet": AlexNet, "VIT": Standard_VIT}
+DATASET_LOADERS = {"MNIST": get_mnist_data, "CIFAR100": get_CIFAR_data}
 LR = 0.005
 BATCH_SIZE = 128
 OPTIMIZER = "Adam"
 DROPOUT_PROB = 0.1
 WEIGHT_DECAY=0.001
+
+mlflow.set_tracking_uri("sqlite:///mlflow.db")
 
 #TRANSFORMER PARAMS
 EMBED_DIM=256
@@ -56,11 +58,6 @@ params={
         "batch_size" : BATCH_SIZE,
         "optimizer" : OPTIMIZER,
         "dropout": DROPOUT_PROB,
-        "weight_decay": WEIGHT_DECAY,
-        "embed_dim": EMBED_DIM,
-        "hidden_dim": HIDDEN_DIM,
-        "num_heads":NUM_HEADS,
-        "num_layers": NUM_LAYERS,
         }
 
 # IMPORT REPO PATHS
@@ -78,31 +75,40 @@ if device.type == "cuda":
 
 if __name__ == "__main__":
 
-    with mlflow.start_run(run_name="VIT_baseline"):
+    parser = argparse.ArgumentParser(description="Description of your experiment.")
+    parser.add_argument(
+        "--MODEL_NAME", type=str, help="Name of the model to use"
+    )
 
-        mlflow.set_tag("model_name", "VisionTransformer")
+    parser.add_argument(
+        "--DATASET_NAME", type=str, help="Name of the dataset to use"
+    )
+
+    args = parser.parse_args()
+    
+
+    mlflow.set_experiment(f"{args.MODEL_NAME}_{args.DATASET_NAME}")
+    with mlflow.start_run(run_name="exploration_run"):
+
+        mlflow.set_tag("model_name", args.MODEL_NAME)
         mlflow.log_params(params)
 
-        model = VisionTransformer(
-            embed_dim=EMBED_DIM,
-            hidden_dim=HIDDEN_DIM,
-            num_heads=NUM_HEADS,
-            num_layers=NUM_LAYERS,
-            patch_size=4,
-            num_channels=3,
-            num_patches=64,
-            num_classes=100,
-            dropout=DROPOUT_PROB,
-        ).to(device)
+        train_dataset, val_dataset, test_dataset = DATASET_LOADERS[args.DATASET_NAME]()
+        num_channels = train_dataset.dataset[0][0].shape[0]
+        input_size = train_dataset.dataset[0][0].shape[1]
+        num_classes = len(set(data_to_list(train_dataset.dataset.targets)))
 
-        logging.info(f"Created Vision Transformer Model with {model_params(model)} trainable parameters")
+        model=MODELS[args.MODEL_NAME](input_size, 
+                                 num_channels, 
+                                 num_classes, 
+                                 dropout_prob=DROPOUT_PROB).to(device)
 
+        logging.info(f"Created {args.MODEL_NAME} Model with {model_params(model)} trainable parameters")
 
         optimizer = getattr(optim, OPTIMIZER)(
             model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY
         )
 
-        train_dataset, val_dataset, test_dataset = get_CIFAR_data()
         train_loader = DataLoader(train_dataset, BATCH_SIZE)
         val_loader = DataLoader(val_dataset, BATCH_SIZE)
         test_loader = DataLoader(test_dataset, BATCH_SIZE)
