@@ -5,11 +5,11 @@ Simple repository for myself to get familiar with various computer vision models
 
 We consider three models in `src/models.py`:
 
-a) **FNN**: A simple forward network a couple of layers deep
+a) **FNN**: A simple forward network a couple of layers deep.
 
 b) **AlexNet**: Not the actual AlexNet (original AlexNet is way too large for current datasets) but a CNN structure inspired from it.
 
-c) **VIT** (VisionTransformer): The vision transformer as proposed by Dosovitskiy et al., model architecture from https://github.com/phlippe/uvadlc_notebooks
+c) **VIT** (VisionTransformer): The vision transformer as proposed by Dosovitskiy et al., model code used from https://github.com/phlippe/uvadlc_notebooks.
 
 After tuning the hyperparameters of the models we compare their performance of the following to common benchmarks:
 
@@ -46,7 +46,7 @@ For the optimal parameters the training runs yield:
 
 ![Alt text]( results/figures/train_comparison.png)
 
-On the final test set, we can see that the AlexNet-inspired model yields best results. This can be understood by the fact that out of all the models the CNN-based models are the only ones relying on inductive bias about the images. In light of CIFAR being a very small dataset this should not come as a surprise. 
+On the final test set, we can see that the AlexNet-inspired model yields best results. Out of the considered models it is the only one using inductive bias about the spatial ordening of the pixels on the image. In light of CIFAR being a very small dataset it should not come as a surprise for such a model to be the best. As can be seen in Dosovitskiy et al. (https://arxiv.org/abs/2010.11929), vision transformers shine on CIFAR once additional data is used for pretraining.
 
 ![Alt text]( results/figures/test_comparison.png)
 
